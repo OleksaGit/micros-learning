@@ -1,17 +1,6 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
-
-export class RegisterDto {
-  email: string;
-  password: string;
-  displayName?: string
-}
-
-export class LoginDto {
-  email: string;
-  password: string;
-
-}
+import { AccountLogin, AccountRegister } from '@micros-learning/contracts';
 
 @Controller('auth')
 export class AuthController {
@@ -21,12 +10,12 @@ export class AuthController {
   }
 
   @Post('register')
-  async register(@Body() dto: RegisterDto) {
+  async register(@Body() dto: AccountRegister.Request): Promise<AccountRegister.Response> {
     return await this.authService.register(dto)
   }
 
   @Post('login')
-  async login(@Body() dto: LoginDto) {
+  async login(@Body() dto: AccountLogin.Request): Promise<AccountLogin.Response> {
     const { id } = await this.authService.validateUser(dto.email, dto.password)
     return await this.authService.login(id)
   }

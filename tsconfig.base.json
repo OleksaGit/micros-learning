@@ -15,6 +15,7 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
+      "@micros-learning/contracts": ["contracts/src/index.ts"],
       "@micros-learning/interfaces": ["interfaces/src/index.ts"]
     }
   },
