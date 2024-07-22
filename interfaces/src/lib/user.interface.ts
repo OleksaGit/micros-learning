@@ -1,5 +1,5 @@
-export function interfaces(): string {
-  return 'interfaces';
+export function userInterface(): string {
+  return 'userInterface';
 }
 export enum UserRole {
   Teacher = 'teacher',

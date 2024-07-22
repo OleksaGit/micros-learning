@@ -1,7 +1,7 @@
-import { interfaces } from './interfaces';
+import { userInterface } from './user.interface';
 
 describe('interfaces', () => {
   it('should work', () => {
-    expect(interfaces()).toEqual('interfaces');
+    expect(userInterface()).toEqual('interfaces');
   });
 });
