@@ -3,8 +3,16 @@ export function userInterface(): string {
 }
 export enum UserRole {
   Teacher = 'teacher',
-  student= 'Student',
+  student= 'student',
 }
+
+export enum PurchaseState {
+  Started = 'Started',
+  WaitingForPayment = 'WaitingForPayment',
+  Purchased = 'Purchased',
+  Canceled = 'Canceled',
+}
+
 
 export interface IUser {
   _id?: string;
@@ -12,4 +20,10 @@ export interface IUser {
   email: string;
   passwordHash: string;
   role: UserRole;
+  courses?: IUserCourses[];
+}
+
+export interface IUserCourses {
+  courseId: string;
+  purchaseState: PurchaseState;
 }
