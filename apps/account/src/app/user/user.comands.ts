@@ -1,28 +1,24 @@
 import { Body, Controller } from '@nestjs/common';
-import { UserRepository } from './repositories/user.repository';
 import { RMQRoute, RMQValidate } from 'nestjs-rmq';
-import { AccountBuyCourse, AccountChangeProfile, AccountCheckPayment } from '@micros-learning/contracts';
-import { UserEntity } from './entities/user.entity';
-import { PurchaseState } from '@micros-learning/interfaces';
+import {
+  AccountBuyCourse,
+  AccountChangeProfile,
+  AccountCheckPayment,
+} from '@micros-learning/contracts';
+import { UserService } from './user.service';
 
 @Controller()
 export class UserCommands {
-  constructor(private readonly userRepository: UserRepository) {
-  }
+  constructor(
+    private readonly userService: UserService,
+  ) {}
 
   @RMQValidate()
   @RMQRoute(AccountChangeProfile.topic)
-  async userInfo(
+  async changeProfile(
     @Body() dto: AccountChangeProfile.Request
   ): Promise<AccountChangeProfile.Response> {
-    const existedUser = await this.userRepository.findUserById(dto.id)
-
-    if (!existedUser) {
-      throw new Error('User not found')
-    }
-    const userEntity = new UserEntity(existedUser).updateProfile(dto.user.displayName)
-    await this.userRepository.updateUser(userEntity)
-    return  {}
+      return await this.userService.changeProfile(dto.user, dto.id)
   }
 
   @RMQValidate()
@@ -30,15 +26,14 @@ export class UserCommands {
   async buyCourse(
     @Body() { userId, courseId }: AccountBuyCourse.Request
   ): Promise<AccountBuyCourse.Response> {
-    return  Promise.resolve({ paymentUrl: ''})
+   return await this.userService.buyCourse(userId, courseId);
   }
 
   @RMQValidate()
   @RMQRoute(AccountCheckPayment.topic)
   async checkPayment(
     @Body() { userId, courseId }: AccountCheckPayment.Request
-  ): Promise<AccountCheckPayment.Response> {
-    return  Promise.resolve({ status: PurchaseState.Started})
+  ){
+    return await this.userService.checkPayment(userId, courseId)
   }
-
 }

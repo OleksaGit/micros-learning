@@ -1,16 +1,21 @@
 import { BuyCourseSagaState } from './buy-course.state';
 import { UserEntity } from '../entities/user.entity';
-import { CourseGetCourse, PaymentCheck, PaymentGenerateLink } from '@micros-learning/contracts';
+import {
+  CourseGetCourse,
+  PaymentCheck,
+  PaymentGenerateLink,
+  PaymentStatus,
+} from '@micros-learning/contracts';
 import { PurchaseState } from '@micros-learning/interfaces';
 
 export class BuyCourseSagaStateStarted extends BuyCourseSagaState {
   async cancel(): Promise<{ user: UserEntity }> {
-    this.saga.setState(PurchaseState.Canceled, this.saga.courseId)
-    return { user: this.saga.user }
+    this.saga.setState(PurchaseState.Canceled, this.saga.courseId);
+    return { user: this.saga.user };
   }
 
-  checkPayment(): Promise<{ user: UserEntity }> {
-    throw new Error('Don\'t possible check payment if it not started')
+  checkPayment(): Promise<{ user: UserEntity; status: PaymentStatus }> {
+    throw new Error("Don't possible check payment if it not started");
   }
 
   async pay(): Promise<{ paymentLink: string; user: UserEntity }> {
@@ -20,76 +25,84 @@ export class BuyCourseSagaStateStarted extends BuyCourseSagaState {
     >(CourseGetCourse.topic, { id: this.saga.courseId });
 
     if (!course) {
-      throw new Error('This course was not found')
+      throw new Error('This course was not found');
     }
 
     if (course.price === 0) {
-      this.saga.setState(PurchaseState.Purchased, course._id)
-      return { paymentLink: null, user: this.saga.user}
+      this.saga.setState(PurchaseState.Purchased, course._id);
+      return { paymentLink: null, user: this.saga.user };
     }
 
-    const { paymentLink} = await this.saga.rmqService.send<PaymentGenerateLink.Request, PaymentGenerateLink.Response>(PaymentGenerateLink.topic, {
+    const { paymentLink } = await this.saga.rmqService.send<
+      PaymentGenerateLink.Request,
+      PaymentGenerateLink.Response
+    >(PaymentGenerateLink.topic, {
       courseId: course._id,
       userId: this.saga.user._id,
       sum: course.price,
-    })
-    this.saga.setState(PurchaseState.WaitingForPayment, course._id)
-    return { paymentLink, user: this.saga.user }
+    });
+    this.saga.setState(PurchaseState.WaitingForPayment, course._id);
+    return { paymentLink, user: this.saga.user };
   }
 }
 
-export class BuyCourseSagaStateWaitingForpayment extends BuyCourseSagaState {
+export class BuyCourseSagaStateWaitingForPayment extends BuyCourseSagaState {
   cancel(): Promise<{ user: UserEntity }> {
-    throw new Error('Don\'t possible cancel payments, if payment processing')
+    throw new Error("Don't possible cancel payments, if payment processing");
   }
 
-  async checkPayment(): Promise<{ user: UserEntity }> {
-    const { status } = await this.saga.rmqService.send<PaymentCheck.Request, PaymentCheck.Response>(PaymentCheck.topic, {
+  async checkPayment(): Promise<{ user: UserEntity; status: PaymentStatus }> {
+    const { status } = await this.saga.rmqService.send<
+      PaymentCheck.Request,
+      PaymentCheck.Response
+    >(PaymentCheck.topic, {
       userId: this.saga.user._id,
       courseId: this.saga.courseId,
-    })
+    });
 
     if (status === 'canceled') {
-      this.saga.setState(PurchaseState.Canceled, this.saga.courseId)
-      return { user: this.saga.user }
+      this.saga.setState(PurchaseState.Canceled, this.saga.courseId);
+      return { user: this.saga.user, status: 'canceled' };
     }
     if (status !== 'success') {
-      return { user: this.saga.user }
-    } else {
-      this.saga.setState(PurchaseState.Purchased, this.saga.courseId)
+      return { user: this.saga.user, status: 'success' };
     }
+    this.saga.setState(PurchaseState.Purchased, this.saga.courseId);
+    return { user: this.saga.user, status: 'progress' };
   }
 
   pay(): Promise<{ paymentLink: string; user: UserEntity }> {
-   throw new Error('Don\'t possible create payment link, if payment processing')
+    throw new Error(
+      "Don't possible create payment link, if payment processing"
+    );
   }
 }
 
 export class BuyCourseSagaStatePurchased extends BuyCourseSagaState {
   cancel(): Promise<{ user: UserEntity }> {
-    throw new Error('Don\'t possible canceled bought course')
+    throw new Error("Don't possible canceled bought course");
   }
 
-  async checkPayment(): Promise<{ user: UserEntity }> {
-    throw new Error('Don\'t possible check paid, if course paid')
+  async checkPayment(): Promise<{ user: UserEntity; status: PaymentStatus }> {
+    throw new Error("Don't possible check paid, if course paid");
   }
 
   pay(): Promise<{ paymentLink: string; user: UserEntity }> {
-    throw new Error('Don\'t possible paying, if course paid')
+    throw new Error("Don't possible paying, if course paid");
   }
 }
 
 export class BuyCourseSagaStateCanceled extends BuyCourseSagaState {
   cancel(): Promise<{ user: UserEntity }> {
-    throw new Error('Don\'t possible canceled bought course')
+    throw new Error("Don't possible canceled bought course");
   }
 
-  async checkPayment(): Promise<{ user: UserEntity }> {
-    throw new Error('Don\'t possible check payment, if course canceled')
+  async checkPayment(): Promise<{ user: UserEntity; status: PaymentStatus }> {
+    throw new Error("Don't possible check payment, if course canceled");
   }
 
   pay(): Promise<{ paymentLink: string; user: UserEntity }> {
-    this.saga.setState(PurchaseState.Started, this.saga.courseId)
+    this.saga.setState(PurchaseState.Started, this.saga.courseId);
     return this.saga.getState().pay();
   }
 }

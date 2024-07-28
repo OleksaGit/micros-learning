@@ -4,7 +4,7 @@ import { PurchaseState } from '@micros-learning/interfaces';
 import { BuyCourseSagaState } from './buy-course.state';
 import {
   BuyCourseSagaStatePurchased,
-  BuyCourseSagaStateWaitingForpayment,
+  BuyCourseSagaStateWaitingForPayment,
   BuyCourseSagaStateStarted,
   BuyCourseSagaStateCanceled
 } from './buy-course.steps';
@@ -25,7 +25,7 @@ export class BuyCourseSaga {
         this.state = new BuyCourseSagaStateStarted()
         break;
       case PurchaseState.WaitingForPayment:
-        this.state = new BuyCourseSagaStateWaitingForpayment()
+        this.state = new BuyCourseSagaStateWaitingForPayment()
         break
       case PurchaseState.Purchased:
         this.state = new BuyCourseSagaStatePurchased();

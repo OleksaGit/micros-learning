@@ -1,5 +1,6 @@
 import { BuyCourseSaga } from './buy-course.saga';
 import { UserEntity } from '../entities/user.entity';
+import { PaymentStatus } from '@micros-learning/contracts';
 
 export abstract class BuyCourseSagaState {
   saga: BuyCourseSaga
@@ -10,7 +11,7 @@ export abstract class BuyCourseSagaState {
 
   abstract pay(): Promise<{paymentLink: string, user: UserEntity}>
 
-  abstract checkPayment(): Promise<{user: UserEntity}>
+  abstract checkPayment(): Promise<{user: UserEntity, status: PaymentStatus}>
 
   abstract cancel(): Promise<{user: UserEntity}>
 

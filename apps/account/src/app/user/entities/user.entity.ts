@@ -1,5 +1,6 @@
-import { IUser, IUserCourses, PurchaseState, UserRole } from '@micros-learning/interfaces';
+import { IDomainEvent, IUser, IUserCourses, PurchaseState, UserRole } from '@micros-learning/interfaces';
 import { compare, genSalt, hash } from 'bcrypt';
+import { AccountChangedCourse } from '@micros-learning/contracts';
 
 export class UserEntity implements IUser{
   _id?: string;
@@ -8,6 +9,7 @@ export class UserEntity implements IUser{
   passwordHash: string;
   role: UserRole;
   courses?: IUserCourses[];
+  events: IDomainEvent[] = [];
 
   constructor(user: IUser) {
     this._id = user._id.toString();
@@ -17,21 +19,6 @@ export class UserEntity implements IUser{
     this.passwordHash = user.passwordHash;
     this.courses = user.courses;
   }
-
-  // addCourse(courseId: string) {
-  //   const exist = this.courses.find((c) => c.courseId === courseId)
-  //     if (exist) {
-  //       throw new Error('This course is exist')
-  //     }
-  //     this.courses.push({
-  //       courseId,
-  //       purchaseState: PurchaseState.Started,
-  //     })
-  //   }
-  //
-  // deleteCourse(courseId) {
-  //   this.courses = this.courses.filter((c) => c.courseId !== courseId)
-  // }
 
   setCourseStatus(courseId: string, state: PurchaseState) {
     const exist = this.courses.find((c) => c.courseId === courseId)
@@ -55,6 +42,7 @@ export class UserEntity implements IUser{
 
       return c;
     })
+    this.events.push( { topic: AccountChangedCourse.topic, data: {courseId, userId: this._id, state}})
     return this
   }
 
