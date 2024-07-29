@@ -16,9 +16,6 @@ export const UserCoursesSchema = SchemaFactory.createForClass(UserCourses);
 
 @Schema()
 export class User extends Document implements IUser {
-  @Prop({ type: String, required: true })
-  _id: string;
-
   @Prop()
   displayName?: string;
 

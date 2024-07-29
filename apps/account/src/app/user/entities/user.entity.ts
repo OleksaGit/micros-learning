@@ -12,7 +12,7 @@ export class UserEntity implements IUser{
   events: IDomainEvent[] = [];
 
   constructor(user: IUser) {
-    this._id = user._id.toString();
+    this._id = user._id?.toString();
     this.displayName = user.displayName;
     this.email = user.email;
     this.role = user.role;
